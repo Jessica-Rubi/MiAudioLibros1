@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.TextView;
@@ -79,18 +80,24 @@ public class DetalleFragment extends Fragment implements View.OnTouchListener, M
         Bundle args = getArguments();
         if (args != null) {
             int position = args.getInt(ARG_ID_LIBRO);
-            ponInfoLibro(position, vista);
+            int val = args.getInt("origen");
+            int lib = args.getInt("libro");
+            if (val == 5) {
+                ponInfoLibro(lib, vista, val);
+            } else {
+                ponInfoLibro(position, vista, val);
+            }
         } else {
-            ponInfoLibro(0, vista);
+            ponInfoLibro(0, vista, 0);
         }
         return vista;
     }
 
     public void ponInfoLibro(int id) {
-        ponInfoLibro(id, getView());
+        ponInfoLibro(id, getView(), 0);
     }
 
-    private void ponInfoLibro(int id, View vista) {
+    private void ponInfoLibro(int id, View vista, int val) {
 //        iSer = new Intent(getContext(), MiServicio.class);
 //        getActivity().startService(iSer);
 //        Intent miss = new Intent(getContext(), );
@@ -100,21 +107,29 @@ public class DetalleFragment extends Fragment implements View.OnTouchListener, M
         ((TextView) vista.findViewById(R.id.titulo)).setText(libro.titulo);
         ((TextView) vista.findViewById(R.id.autor)).setText(libro.autor);
         ((ImageView) vista.findViewById(R.id.portada)).setImageResource(libro.recursoImagen);
-        vista.setOnTouchListener(this);
-        if (mediaPlayer != null){
-            mediaPlayer.release();
+        (vista.findViewById(R.id.Detener)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stopService();
+            }
+        });
+//        vista.setOnTouchListener(this);
+//        if (mediaPlayer != null){
+//            mediaPlayer.release();
+//        }
+//        mediaPlayer = new MediaPlayer();
+//        mediaPlayer.setOnPreparedListener(this);
+//        mediaController = new MediaController(getActivity());
+//        Uri audio = Uri.parse(libro.urlAudio);
+        if (!(val == 5)) {
+            startService(libro.titulo, libro.urlAudio, id);
         }
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnPreparedListener(this);
-        mediaController = new MediaController(getActivity());
-        Uri audio = Uri.parse(libro.urlAudio);
-        startService(libro.titulo, libro.urlAudio);
-        try {
-            mediaPlayer.setDataSource(getActivity(), audio);
-            mediaPlayer.prepareAsync();
-        } catch (IOException e) {
-            Log.e("Audiolibros", "ERROR: No se puede reproducir "+audio,e);
-        }
+//        try {
+//            mediaPlayer.setDataSource(getActivity(), audio);
+//            mediaPlayer.prepareAsync();
+//        } catch (IOException e) {
+//            Log.e("Audiolibros", "ERROR: No se puede reproducir "+audio,e);
+//        }
     }
 
     @Override
@@ -139,7 +154,7 @@ public class DetalleFragment extends Fragment implements View.OnTouchListener, M
 //            mediaPlayer.stop();
 //            mediaPlayer.release();
 //            mediaPlayer = null;
-            stopService();
+        stopService();
 //        }else {
 //            mediaPlayer.start();
 //        }
@@ -198,25 +213,28 @@ public class DetalleFragment extends Fragment implements View.OnTouchListener, M
 
     @Override
     public void onStop() {
-        super.onStop();
+
 //        getActivity().stopService(iSer);
 //        stopService();
-        mediaController.hide();
+//        mediaController.hide();
         try {
             mediaPlayer.stop();
             mediaPlayer.release();
         } catch (Exception e) {
             Log.d("Audiolibros", "Error en mediaPlayer.stop()");
         }
+        super.onStop();
     }
 
-    public void startService(String nombre, String uri){
+    public void startService(String nombre, String uri, int id) {
         Intent serviceIntent = new Intent(getContext(), MiServicio.class);
         serviceIntent.putExtra("nombreLibro", nombre);
         serviceIntent.putExtra("uriLibro", uri);
+        serviceIntent.putExtra("idlibro", id);
         getActivity().startService(serviceIntent);
     }
-    public void stopService(){
+
+    public void stopService() {
         Intent serviceIntent = new Intent(getContext(), MiServicio.class);
         getActivity().stopService(serviceIntent);
     }

@@ -17,7 +17,6 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import com.example.miaudiolibros.MainActivity;
-import com.example.miaudiolibros.R;
 
 import java.io.IOException;
 
@@ -55,15 +54,23 @@ public class MiServicio extends Service implements MediaPlayer.OnPreparedListene
         createNotificationChannel();
         String nombreLibro = intent.getStringExtra("nombreLibro");
         String uriString = intent.getStringExtra("uriLibro");
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(nombreLibro)
-                .setContentText("Libro actual")
-                .setSmallIcon(android.R.drawable.ic_menu_slideshow)
-                .setContentIntent(pendingIntent)
-                .build();
-        startForeground(1, notification);
+        int idlib = intent.getIntExtra("idlibro",0);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel();
+            foregroundService(nombreLibro, idlib);
+        }else {
+            Intent notificationIntent = new Intent(this, MainActivity.class);
+            notificationIntent.putExtra("notify","4");
+            notificationIntent.putExtra("idlib",idlib);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle(nombreLibro)
+                    .setContentText("Libro actual")
+                    .setSmallIcon(android.R.drawable.ic_menu_slideshow)
+                    .setContentIntent(pendingIntent)
+                    .build();
+            startForeground(1, notification);
+        }
         if (mediaPlayer != null) {
             mediaPlayer.release();
         }
@@ -91,9 +98,34 @@ public class MiServicio extends Service implements MediaPlayer.OnPreparedListene
         return null;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void foregroundService(String nameBook, int id) {
+
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.putExtra("notify","4");
+        notificationIntent.putExtra("idlib",id);
+
+
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(this, 1002, notificationIntent, 0);
+
+        Notification notification =
+                new Notification.Builder(this, CHANNEL_ID)
+                        .setContentTitle(nameBook)
+                        .setContentText("Libro actual")
+                        .setSmallIcon(android.R.drawable.ic_menu_slideshow)
+                        .setContentIntent(pendingIntent)
+                        .build();
+
+        // Notification ID cannot be 0.
+        startForeground(1000, notification);
+
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mediaPlayer.stop();
         Log.d("MSAL", "Servicio destruido");
     }
 

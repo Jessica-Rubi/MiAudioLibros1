@@ -19,6 +19,24 @@ public class MainActivity extends AppCompatActivity {
                 getSupportFragmentManager().findFragmentById(R.id.contenedor_pequeno) == null){
             getSupportFragmentManager().beginTransaction().add(R.id.contenedor_pequeno, selectorFragment).commit();
         }
+        Bundle bundle = getIntent().getExtras();
+        String val = bundle.getString("notify");
+        int libid = bundle.getInt("idlib");
+        System.out.println(val);
+        prueba(val, libid);
+    }
+
+    public void prueba(String valor, int id1){
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Bundle bundle = new Bundle();
+        if(valor.equals("4")){
+            bundle.putInt("origen", 5);
+            bundle.putInt("libro", id1);
+            DetalleFragment detalleFragment = new DetalleFragment();
+            detalleFragment.setArguments(bundle);
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentManager.beginTransaction().replace(R.id.contenedor_pequeno, detalleFragment).addToBackStack(null).commit();
+        }
     }
 
     public void mostrarDetalle(int index){
@@ -40,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
             Bundle bundle = new Bundle();
 
             bundle.putInt(DetalleFragment.ARG_ID_LIBRO, index);
+            bundle.putInt("origen", 6);
 
             detalleFragment.setArguments(bundle);
 
